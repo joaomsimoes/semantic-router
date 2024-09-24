@@ -211,18 +211,16 @@ class HFEndpointEncoder(BaseEncoder):
         Raises:
             ValueError: If no embeddings are returned for a document.
         """
+        batch_size = 32
         embeddings = []
-        for d in docs:
+        for i in range(0, len(docs), batch_size):
+            batch = docs[i : i + batch_size]
             try:
-                output = self.query({"inputs": d, "parameters": {}})
-                if not output or len(output) == 0:
+                outputs = self.query({"inputs": batch, "parameters": {}})
+                if not outputs or len(outputs) == 0:
                     raise ValueError("No embeddings returned from the query.")
-                embeddings.append(output)
-
-            except Exception as e:
-                raise ValueError(
-                    f"No embeddings returned for document. Error: {e}"
-                ) from e
+                if isinstance(outputs[0], list):
+                    embeddings.extend(outputs)
         return embeddings
 
     def query(self, payload, max_retries=3, retry_interval=5):
@@ -261,6 +259,7 @@ class HFEndpointEncoder(BaseEncoder):
                         continue
                 else:
                     response.raise_for_status()
+                    break
 
             except requests.exceptions.RequestException:
                 if attempt < max_retries - 1:
