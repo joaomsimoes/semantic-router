@@ -215,12 +215,11 @@ class HFEndpointEncoder(BaseEncoder):
         embeddings = []
         for i in range(0, len(docs), batch_size):
             batch = docs[i : i + batch_size]
-            try:
-                outputs = self.query({"inputs": batch, "parameters": {}})
-                if not outputs or len(outputs) == 0:
-                    raise ValueError("No embeddings returned from the query.")
-                if isinstance(outputs[0], list):
-                    embeddings.extend(outputs)
+            outputs = self.query({"inputs": batch, "parameters": {}})
+            if not outputs or len(outputs) == 0:
+                raise ValueError("No embeddings returned from the query.")
+            if isinstance(outputs[0], list):
+                embeddings.extend(outputs)
         return embeddings
 
     def query(self, payload, max_retries=3, retry_interval=5):
